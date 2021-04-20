@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+    
+    <head></head>
+    
+    <body>SCORE:
+        <input id="lblScore" type="text" />
+        <br/>
+        TIME:
+        <input id="lblTime" type="text" />
+        <br/>
+        LIVES:
+        <input id="lblLives" type="text" />
+        <br/>
+
+        <canvas id="canvas" height="600" width="600"></canvas>
+		
+        <script type="text/javascript">
+            let empty = 0;
+            let point5 = 1;
+            let pacman = 2;
+            let point15 = 3;
+            let point25 = 4;
+            let wall = 5;
+            let monster = 6;
+
+            let context = canvas.getContext("2d");
+            let pacman_pos = {};
+            let monster_pos = {};
+            let monsters_num = 1;
+            let before_monster;
+            let board;
+            let score = 0;
+            let lives = 5;
+            let pac_color;
+            let start_time;
+            let time_elapsed;
+            let first_start = true;
+            let interval;
+
+            Start();
+
+            function Start() {
+                board = new Array()
+                // score = 0;
+                pac_color = "yellow";
+                let walls = ["11", "21", "23", "25", "26", "27", "210", "33", "35", "39", "310", "41", "42", "43",
+                    "45", "47", "410", "57", "61", "62", "63", "71", "72", "73", "75", "85", "86", "88", "89", "810",
+                    "95", "910", "101", "102", "108", "109", "1010"];
+                let cnt = 144;
+                let food_remain = 50;
+                let food5_remain = 0.6 * food_remain;
+                let food15_remain = 0.3 * food_remain;
+                let food25_remain = 0.1 * food_remain;
+                let pacman_remain = 1;
+                start_time = new Date();
+                for (let i = 0; i < 12; i++) {
+                    board[i] = new Array();
+                    for (let j = 0; j < 12; j++) {
+
+                        if (walls.includes(i + "" + j))
+                            board[i][j] = wall;
+                        else
+                            board[i][j] = empty;
+                        }
+                    }
+
+                    PlaceMonsters(monsters_num);
+                    PlacePoints(point5, food5_remain);
+                    PlacePoints(point15, food15_remain);
+                    PlacePoints(point25, food25_remain);
+
+                    let pos = GetRandomPosition();
+                    pacman_pos.i = pos[0];
+                    pacman_pos.j = pos[1];
+                    pacman_remain--;
+                    board[pos[0]][pos[1]] = pacman;
+
+
+                keysDown = {};
+                addEventListener("keydown", function (e) {
+                    keysDown[e.keyCode] = true;
+                }, false);
+                addEventListener("keyup", function (e) {
+                    keysDown[e.keyCode] = false;
+                }, false);
+
+                interval = setInterval(function(){UpdatePosition(); }, 100);
+                setInterval(function(){MoveMonster()}, 1000);
+
+            }
+
+
+            function PlaceMonsters(monsters_num=1) {
+                before_monster = board[0][0];
+                board[0][0] = monster;
+                monster_pos.i = 0;
+                monster_pos.j = 0;
+            }
+
+            function PlacePoints(point_type, amount) {
+                while (amount > 0){
+                    let pos = GetRandomPosition();
+                    board[pos[0]][pos[1]] = point_type;
+                    amount--;
+                }
+            }
+
+            function GetRandomPosition() {
+                let size = board.length;
+                let x = Math.floor(Math.random() * size);
+                let y = Math.floor(Math.random() * size);
+                while (board[x][y] != empty) {
+                    x = Math.floor(Math.random() * size);
+                    y = Math.floor(Math.random() * size);
+
+                }
+                return [x, y];
+            }
+
+            /**
+             * @return {number}
+             */
+            function GetKeyPressed() {
+                if (keysDown[39]) {
+                    return 1;
+                }
+                if (keysDown[40]) {
+                    return 2;
+                }
+                if (keysDown[37]) {
+                    return 3;
+                }
+                if (keysDown[38]) {
+                    return 4;
+                }
+            }
+
+            function Draw(side = 1) {
+                canvas.width = canvas.width; //clean board
+                lblScore.value = score;
+                lblLives.value = lives;
+
+                let my_gradient = context.createLinearGradient(0, 0, 600, 0);
+
+                for (let i = 0; i < 12; i++) {
+                    for (let j = 0; j < 12; j++) {
+                        let center = new Object();
+                        center.x = i * 50 + 25;
+                        center.y = j * 50 + 25;
+                        if (board[i][j] == pacman) {
+                            context.beginPath();
+                            context.arc(center.x, center.y, 23, (0.2 + 0.5 * (side - 1)) * Math.PI, (1.8 + 0.5 * (side - 1)) * Math.PI);
+                            context.lineTo(center.x, center.y);
+                            context.fillStyle = pac_color; //color
+                            context.fill();
+                            context.beginPath();
+                            context.arc(center.x + 5, center.y - 15, 5, 0, 2 * Math.PI); // circle
+                            context.fillStyle = "black"; //color
+                            context.fill();
+
+                        } else if (board[i][j] == point5) {
+                            context.beginPath();
+                            context.arc(center.x, center.y, 7, 0, 2 * Math.PI); // circle
+                            context.fillStyle = "black"; //color
+                            context.fill();
+                            context.fillStyle = "white";
+                            context.fillText("5", center.x - 4, center.y + 2);
+
+                        } else if (board[i][j] == point15) {
+                            context.beginPath();
+                            context.arc(center.x, center.y, 10, 0, 2 * Math.PI); // circle
+                            context.fillStyle = "purple"; //color
+                            context.fill();
+                            context.fillStyle = "white"; //number in circle
+                            context.strokeText("15", center.x - 4, center.y + 2);
+
+
+                        } else if (board[i][j] == point25) {
+                            context.beginPath();
+                            context.arc(center.x, center.y, 15, 0, 2 * Math.PI); // circle
+                            context.fillStyle = "pink"; //color
+                            context.fill();
+                            context.strokeText("25", center.x - 4, center.y + 2);
+
+                        } else if (board[i][j] == wall) {
+                            // context.fillStyle = "blue";
+                            my_gradient.addColorStop(0, "black");
+                            my_gradient.addColorStop(0.5, "blue");
+                            my_gradient.addColorStop(1, "grey");
+                            context.fillStyle = my_gradient;
+                            context.fillRect(center.x - 20, center.y - 20, 50, 50)
+
+                        }
+                        else if (board[i][j] == monster){
+                            DrawMonster(context, 20, "red", center.x, center.y);
+                        }
+                    }
+                }
+
+            }
+
+            function DrawMonster(ctx, radius, color, x, y) {
+                /***
+                 * code taken from http://www.java2s.com/example/javascript-book/pacman-and-ghost.html
+                 *
+                 */
+                // color = color || {}
+                let feet =  4;
+                let head_radius = radius * 0.8;
+                let foot_radius = head_radius / feet;
+                ctx.save();
+                ctx.strokeStyle = color.stroke || "white";
+                ctx.fillStyle = color.fill || "red";
+                ctx.lineWidth = color.lineWidth || radius * 0.05;
+                ctx.beginPath();
+                for (let foot = 0; foot < feet; foot++) {
+                    ctx.arc(
+                        (2 * foot_radius * (feet - foot)) - head_radius - foot_radius + x,
+                        radius - foot_radius + y,
+                        foot_radius, 0, Math.PI
+                    );
+                }
+
+                ctx.lineTo(x-head_radius, y+radius - foot_radius);
+                ctx.arc(x, y+head_radius - radius, head_radius, Math.PI, 2 * Math.PI);
+
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                //eyes
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(x-head_radius / 2.5, y-head_radius / 2, head_radius / 3, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+head_radius / 3.5, y-head_radius / 2, head_radius / 3, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = "black";
+                ctx.beginPath();
+                ctx.arc(x-head_radius / 2, y-head_radius / 2.2, head_radius / 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+head_radius / 4, y-head_radius / 2.2, head_radius / 8, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            function DrawTime() {
+                lblTime.value = time_elapsed;
+            }
+
+            function UpdatePosition() {
+                board[pacman_pos.i][pacman_pos.j] = empty;
+                let x = GetKeyPressed();
+                if (x == 1) // right
+                {
+                    if (pacman_pos.i < 11 && board[pacman_pos.i + 1][pacman_pos.j] != wall) {
+                        pacman_pos.i++;
+                    }
+                }
+
+                if (x == 2) // down
+                {
+                    if (pacman_pos.j < 11 && board[pacman_pos.i][pacman_pos.j + 1] != wall) {
+                        pacman_pos.j++;
+                    }
+                }
+                if (x == 3) // left
+                {
+                    if (pacman_pos.i > 0 && board[pacman_pos.i - 1][pacman_pos.j] != wall) {
+                        pacman_pos.i--;
+                    }
+                }
+                if (x == 4) // up
+                {
+                    if (pacman_pos.j > 0 && board[pacman_pos.i][pacman_pos.j - 1] != wall) {
+                        pacman_pos.j--;
+                    }
+                }
+                if (board[pacman_pos.i][pacman_pos.j] == monster){
+                    score -= 10;
+                    lives --;
+                    if (lives == 0){
+                        window.clearInterval(interval);
+                        window.alert("Loser!");
+                    }
+                    else
+                        Start();
+                }
+
+                if (board[pacman_pos.i][pacman_pos.j] == point5) {
+                    score += 5;
+                } else if (board[pacman_pos.i][pacman_pos.j] == point15) {
+                    score += 15;
+                } else if (board[pacman_pos.i][pacman_pos.j] == point25){
+                    score += 25;
+                }
+
+                board[pacman_pos.i][pacman_pos.j] = pacman;
+
+
+
+                let currentTime = new Date();
+                time_elapsed = (currentTime - start_time) / 1000;
+                // DrawTime() // TODO I AM TIME
+
+                // if(score >= 20 && time_elapsed<=10)
+                // {
+                // 	pac_color="green";
+                // }
+                if (score == 100000) {
+                    window.clearInterval(interval);
+                    window.alert("Game completed");
+                }
+                else if (x !== undefined || first_start) {
+                    Draw(x);
+                    first_start = false;
+                }
+            }
+
+
+            function MoveMonster(){
+                board[monster_pos.i][monster_pos.j] = before_monster; // put back what was in spot before monster (e.g point)
+                monster_pos.i++;
+                before_monster = board[monster_pos.i][monster_pos.j]; // update
+                board[monster_pos.i][monster_pos.j] = monster;
+
+            }
+        </script>
+    </body>
+
+</html>
