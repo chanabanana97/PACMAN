@@ -13,7 +13,7 @@
         <input id="lblLives" type="text" />
         <br/>
 
-        <canvas id="canvas" height="600" width="600"></canvas>
+        <canvas id="canvas" height="494" width="800"></canvas>
 		
         <script type="text/javascript">
             let empty = 0;
@@ -23,7 +23,7 @@
             let point25 = 4;
             let wall = 5;
             let monster = 6;
-
+            let boardSize = 17;
             let context = canvas.getContext("2d");
             let pacman_pos = {};
             let monster_pos = {};
@@ -33,20 +33,20 @@
             let score = 0;
             let lives = 5;
             let pac_color;
+            let pac_side = 1;
             let start_time;
             let time_elapsed;
             let first_start = true;
             let interval;
-
             Start();
 
             function Start() {
-                board = new Array()
+                board = new Array();
                 // score = 0;
                 pac_color = "yellow";
-                let walls = ["11", "21", "23", "25", "26", "27", "210", "33", "35", "39", "310", "41", "42", "43",
+                let walls = ["21", "23", "25", "26", "27", "210", "33", "35", "39", "310", "41", "42", "43",
                     "45", "47", "410", "57", "61", "62", "63", "71", "72", "73", "75", "85", "86", "88", "89", "810",
-                    "95", "910", "101", "102", "108", "109", "1010"];
+                    "95", "910", "101", "102", "108", "109", "1010","133","132"];
                 let cnt = 144;
                 let food_remain = 50;
                 let food5_remain = 0.6 * food_remain;
@@ -54,11 +54,11 @@
                 let food25_remain = 0.1 * food_remain;
                 let pacman_remain = 1;
                 start_time = new Date();
-                for (let i = 0; i < 12; i++) {
+                for (let i = 0; i < boardSize; i++) {
                     board[i] = new Array();
-                    for (let j = 0; j < 12; j++) {
+                    for (let j = 0; j < boardSize-4; j++) {
 
-                        if (walls.includes(i + "" + j))
+                        if (walls.includes(i + "" + j) || (i == 0) || (j==0) || (i == boardSize-1) || (j == boardSize-5))
                             board[i][j] = wall;
                         else
                             board[i][j] = empty;
@@ -86,16 +86,16 @@
                 }, false);
 
                 interval = setInterval(function(){UpdatePosition(); }, 100);
-                setInterval(function(){MoveMonster()}, 1000);
+                setInterval(MoveMonster, 1000);
 
             }
 
 
             function PlaceMonsters(monsters_num=1) {
-                before_monster = board[0][0];
-                board[0][0] = monster;
-                monster_pos.i = 0;
-                monster_pos.j = 0;
+                before_monster = board[1][1];
+                board[1][1] = monster;
+                monster_pos.i = 1;
+                monster_pos.j = 1;
             }
 
             function PlacePoints(point_type, amount) {
@@ -136,52 +136,29 @@
                 }
             }
 
-            function Draw(side = 1) {
+            function Draw() {
                 canvas.width = canvas.width; //clean board
                 lblScore.value = score;
                 lblLives.value = lives;
 
                 let my_gradient = context.createLinearGradient(0, 0, 600, 0);
 
-                for (let i = 0; i < 12; i++) {
-                    for (let j = 0; j < 12; j++) {
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize-4; j++) {
                         let center = new Object();
-                        center.x = i * 50 + 25;
-                        center.y = j * 50 + 25;
+                        center.x = i * 40 + 25;
+                        center.y = j * 40 + 25;
                         if (board[i][j] == pacman) {
-                            context.beginPath();
-                            context.arc(center.x, center.y, 23, (0.2 + 0.5 * (side - 1)) * Math.PI, (1.8 + 0.5 * (side - 1)) * Math.PI);
-                            context.lineTo(center.x, center.y);
-                            context.fillStyle = pac_color; //color
-                            context.fill();
-                            context.beginPath();
-                            context.arc(center.x + 5, center.y - 15, 5, 0, 2 * Math.PI); // circle
-                            context.fillStyle = "black"; //color
-                            context.fill();
+                            DrawPacman(center.x, center.y, pac_side);
 
                         } else if (board[i][j] == point5) {
-                            context.beginPath();
-                            context.arc(center.x, center.y, 7, 0, 2 * Math.PI); // circle
-                            context.fillStyle = "black"; //color
-                            context.fill();
-                            context.fillStyle = "white";
-                            context.fillText("5", center.x - 4, center.y + 2);
+                            DrawPoint(center.x, center.y, 7, "black", "5", "white")
 
                         } else if (board[i][j] == point15) {
-                            context.beginPath();
-                            context.arc(center.x, center.y, 10, 0, 2 * Math.PI); // circle
-                            context.fillStyle = "purple"; //color
-                            context.fill();
-                            context.fillStyle = "white"; //number in circle
-                            context.strokeText("15", center.x - 4, center.y + 2);
-
+                            DrawPoint(center.x, center.y, 10, "purple", "15", "white")
 
                         } else if (board[i][j] == point25) {
-                            context.beginPath();
-                            context.arc(center.x, center.y, 15, 0, 2 * Math.PI); // circle
-                            context.fillStyle = "pink"; //color
-                            context.fill();
-                            context.strokeText("25", center.x - 4, center.y + 2);
+                            DrawPoint(center.x, center.y, 15, "pink", "25")
 
                         } else if (board[i][j] == wall) {
                             // context.fillStyle = "blue";
@@ -189,8 +166,7 @@
                             my_gradient.addColorStop(0.5, "blue");
                             my_gradient.addColorStop(1, "grey");
                             context.fillStyle = my_gradient;
-                            context.fillRect(center.x - 20, center.y - 20, 50, 50)
-
+                            context.fillRect(center.x - 20, center.y - 20, 40, 40);
                         }
                         else if (board[i][j] == monster){
                             DrawMonster(context, 20, "red", center.x, center.y);
@@ -200,12 +176,34 @@
 
             }
 
+            function DrawPacman(x, y, side) {
+                context.beginPath();
+                context.arc(x,y , 23, (0.2 + 0.5 * (side - 1)) * Math.PI, (1.8 + 0.5 * (side - 1)) * Math.PI);
+                context.lineTo(x, y);
+                context.fillStyle = pac_color; //color
+                context.fill();
+                context.beginPath();
+                context.arc(x + 5, y - 15, 5, 0, 2 * Math.PI); // eye
+                context.fillStyle = "black"; //color
+                context.fill();
+            }
+
+
+            function DrawPoint(x, y, radius, color, text, text_color="black") {
+                context.beginPath();
+                context.arc(x, y, radius, 0, 2 * Math.PI); // circle
+                context.fillStyle = color;
+                context.fill();
+                context.fillStyle = text_color;
+                context.fillText(text, x - 4, y + 2);
+            }
+
+
             function DrawMonster(ctx, radius, color, x, y) {
                 /***
                  * code taken from http://www.java2s.com/example/javascript-book/pacman-and-ghost.html
                  *
                  */
-                // color = color || {}
                 let feet =  4;
                 let head_radius = radius * 0.8;
                 let foot_radius = head_radius / feet;
@@ -256,28 +254,30 @@
             function UpdatePosition() {
                 board[pacman_pos.i][pacman_pos.j] = empty;
                 let x = GetKeyPressed();
+                if (x != undefined)
+                    pac_side = x;
                 if (x == 1) // right
                 {
-                    if (pacman_pos.i < 11 && board[pacman_pos.i + 1][pacman_pos.j] != wall) {
+                    if (board[pacman_pos.i + 1][pacman_pos.j] != wall) {
                         pacman_pos.i++;
                     }
                 }
 
                 if (x == 2) // down
                 {
-                    if (pacman_pos.j < 11 && board[pacman_pos.i][pacman_pos.j + 1] != wall) {
+                    if (board[pacman_pos.i][pacman_pos.j + 1] != wall) {
                         pacman_pos.j++;
                     }
                 }
                 if (x == 3) // left
                 {
-                    if (pacman_pos.i > 0 && board[pacman_pos.i - 1][pacman_pos.j] != wall) {
+                    if (board[pacman_pos.i - 1][pacman_pos.j] != wall) {
                         pacman_pos.i--;
                     }
                 }
                 if (x == 4) // up
                 {
-                    if (pacman_pos.j > 0 && board[pacman_pos.i][pacman_pos.j - 1] != wall) {
+                    if (board[pacman_pos.i][pacman_pos.j - 1] != wall) {
                         pacman_pos.j--;
                     }
                 }
@@ -301,12 +301,9 @@
                 }
 
                 board[pacman_pos.i][pacman_pos.j] = pacman;
-
-
-
                 let currentTime = new Date();
                 time_elapsed = (currentTime - start_time) / 1000;
-                DrawTime() // TODO I AM TIME
+                // DrawTime() // TODO I AM TIME
 
                 // if(score >= 20 && time_elapsed<=10)
                 // {
@@ -317,18 +314,59 @@
                     window.alert("Game completed");
                 }
                 else if (x !== undefined || first_start) {
-                    Draw(x);
+                    Draw();
                     first_start = false;
                 }
             }
 
+            function MonsterDfs(pos) {
+
+                pos = [pos.i, pos.j];
+                let stack = [pos];
+                let res = [];
+                let visited = [];
+                while (stack.length) {
+                    let curr = stack.pop();
+                    if (!visited.includes(curr.toString())) {
+                        visited.push(curr.toString());
+                        if (curr.toString == (pacman_pos.i + "" + pacman_pos.j) ){}
+                            // SAVE PATH TILL HERE
+                        let neighbors = GetPossibleNeighbors(curr[0], curr[1]);
+                        for (let j = 0; j < neighbors.length; j++) {
+                                stack.push(neighbors[j]);
+
+                            }
+
+                    }
+                    }
+                return res[0];
+            }
+
+            function GetPossibleNeighbors(i, j){
+                let neighbors = [];
+                if (board[i + 1][j] != wall) // monster is left of pacman
+                    neighbors.push([i +1, j]);
+
+                if (board[i - 1][j] != wall)
+                    neighbors.push([i -1 , j]);
+
+                if (board[i][j+ 1] != wall) // monster is on top of pacman
+                    neighbors.push([i , j + 1]);
+
+                if (board[i][j - 1] != wall)
+                    neighbors.push([i, j-1]);
+
+                return neighbors;
+            }
 
             function MoveMonster(){
                 board[monster_pos.i][monster_pos.j] = before_monster; // put back what was in spot before monster (e.g point)
-                monster_pos.i++;
-                before_monster = board[monster_pos.i][monster_pos.j]; // update
+                let new_pos = MonsterDfs(monster_pos);
+                monster_pos.i = new_pos[0];
+                monster_pos.j = new_pos[1];
+                before_monster = board[monster_pos.i][monster_pos.j]; // update before_monster to next spot monster will go
                 board[monster_pos.i][monster_pos.j] = monster;
-
+                Draw();
             }
         </script>
     </body>
