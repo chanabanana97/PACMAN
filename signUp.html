@@ -2,65 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ad matai</title>
+    <title>PACMAN</title>
         <script src="./jquery-3.4.1.slim.min.js"> </script>
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript">
 
-           $(function () {
-               $.validator.addMethod("passwordCheck",
-                   function (value, element) {
-                       if (this.optional(element))
-                           return true;
-                       else {
-                           /\d/.test(value) &&
-                           /[a-z]/i.test(value)
-                       }
-                   });
-           })
+            $(function () {
+                $.validate.add("passwordCheck",
+                    function (value, element) {
+                        return (this.optional(element)) ||
+                            (/\d/.test(value) &&
+                                /[a-z]/i.test(value));
+
+                    })}
+            );
+
+            $(function () {
+                $.validate.add("lettersOnly", function(value, element) {
+                    return this.optional(element) || /^[a-z]+$/i.test(value);
+                }, "Letters only please");
+
+                    });
 
 
-               $(document).ready((function () {
+           $(document).ready((function () {
 
-                   $("form[name='registration']").validate({
-                       // Specify validation rules
-                       rules: {
-                           // The key name on the left side is the name attribute
-                           // of an input field. Validation rules are defined
-                           // on the right side
-                           username: "required",
-                           name: {
-                               required: true,
+               $("form[name='registration']").validate({
+                   // Specify validation rules
+                   rules: {
 
-
-                           },
-                           email: {
-                               required: true,
-                               email: true,
-                           },
-                           password: {
-                               required: true,
-                               minlength: 6,
-                               passwordCheck: true,
-
-                           }
+                       username: "required",
+                       name: {
+                           required: true,
+                           // lettersOnly: true
                        },
-                       // Specify validation error messages
-                       messages: {
-                           username: "Please enter your username",
-                           name: "Please enter your full name",
-                           password: {
-                               required: "Please provide a password",
-                               minlength: "Your password must be at least 5 characters long"
-                           },
-                           email: "Please enter a valid email address"
+                       email: {
+                           required: true,
+                           email: true
                        },
-                       // Make sure the form is submitted to the destination defined
-                       // in the "action" attribute of the form when valid
-                       submitHandler: function (form) {
-                           form.submit();
+                       password: {
+                           required: true,
+                           minlength: 6,
+                           // passwordCheck: true
                        }
-                   });
-               }));
+                   },
+                   // Specify validation error messages
+                   messages: {
+                       username: "Please enter your username",
+                       name: "Please enter your full name",
+                       password: {
+                           required: "Please provide a password",
+                           minlength: "Your password must be at least 6 characters long",
+                           passwordCheck: "Your password must contain letters and numbers"
+                       },
+                       email: "Please enter a valid email address"
+                   },
+                   // Make sure the form is submitted to the destination defined
+                   // in the "action" attribute of the form when valid
+                   submitHandler: function (form) {
+                       form.submit();
+                   }
+               });
+           }));
 
         </script>
 
@@ -69,7 +71,7 @@
 <body>
 
 
-<form id="registration">
+<form action="" id="registration" method="post">
     <label for="username">Username:</label><br>
     <input type="text" id="username" name="username" ><br>
     <label for="password">Password:</label><br>
@@ -77,18 +79,16 @@
     <label for="name">Full Name:</label><br>
     <input type="text" id="name" name="name" ><br>
     <label for="email">Email</label><br>
-    <input type="email" id="email" name="lname" ><br>
+    <input type="email" id="email" name="email" ><br>
     <label for="start">Birth Date:</label><br>
 
     <input type="date" id="start" name="birthdate"
            value="2018-07-22"
-           min="1920-01-01" max="2021-04-28">
+           min="1920-01-01" max="2021-04-28"> <br/>
     <button type="submit" class="registerbtn">Sign Up</button>
+<!--    <input class="submit" type="submit" value="submit">-->
     <br>
 </form>
-
-
-
 
 
 </body>
