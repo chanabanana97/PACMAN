@@ -91,10 +91,25 @@ function Start() {
 	keysDown = {};
 	addEventListener("keydown", function (e) {
 		keysDown[e.keyCode] = true;
+		switch(e.keyCode) {
+			case 37:
+			case 39:
+			case 38:
+			case 40:
+			case 32:
+				e.preventDefault(); // prevent page scrolling with arrow keys
+				break;
+			default:
+				break; // do not block other keys
+		}
+
 	}, false);
+
 	addEventListener("keyup", function (e) {
 		keysDown[e.keyCode] = false;
 	}, false);
+
+
 
 	interval = setInterval(function(){UpdatePosition(); }, 100);
 
